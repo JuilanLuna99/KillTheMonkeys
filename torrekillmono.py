@@ -10,7 +10,7 @@ pilas = pilasengine.iniciar()
 # Usar un fondo estándar
 pilas.fondos.Pasto()
 # Añadir un marcador
-puntos = pilas.actores.Puntaje(x=230, y=200, color=pilas.colores.blanco)
+puntos = pilas.actores.Puntaje(x=230, y=200, color=pilas.colores.naranja)
 puntos.magnitud = 40
 # Añadir el conmutador de Sonido
 pilas.actores.Sonido()
@@ -19,17 +19,26 @@ pilas.actores.Sonido()
 balas_simples = pilas.actores.Bala
 monos = []
 
+
 # Funciones
-def mono_destruido():
-    pass
+def mono_destruido(disparo,enemigo):
+    enemigo.eliminar()
+    disparo.eliminar()
+    efecto = random.uniform(0.5,1)
+    puntos.aumentar()
+    puntos.escala = (2,efecto),.5
+    a=monos.index(enemigo)
+    del monos[a]
 
 
 def crear_mono():
+    efecto = random.uniform(.25,.75)
     # Crear un enemigo nuevo
     enemigo = pilas.actores.Mono()
     # Hacer que se aparición sea con un efecto bonito
     ##la escala varíe entre 0,25 y 0,75 (Ojo con el radio de colisión)
-    enemigo.escala = .5
+    enemigo.escala = (1.2,efecto),.25
+    enemigo.radio_de_colision = efecto*50
     # Dotarle de la habilidad de que explote al ser alcanzado por un disparo
     enemigo.aprender(pilas.habilidades.PuedeExplotar)
     # Situarlo en una posición al azar, no demasiado cerca del jugador
@@ -74,6 +83,17 @@ torreta = pilas.actores.Torreta(enemigos=monos, cuando_elimina_enemigo=mono_dest
 pilas.tareas.agregar(1, crear_mono)
 #pilas.mundo.agregar_tarea(1, crear_mono) <-- sintaxis vieja
 
+def perder(torreta, enemigo):
+    # Indicar fin de juego y eliminar lo que ya no se necesita
+    global fin_de_juego
+    enemigo.sonreir()
+    torreta.eliminar()
+    aviso=pilas.actores.Texto("GAME OVER")
+    aviso.y = -100
+    aviso.definir_color(pilas.colores.naranja)
+    pilas.avisar("Conseguiste %d puntos" % (puntos.obtener()))
+    fin_de_juego=True
+pilas.colisiones.agregar(torreta,monos,perder)
 
 # Arrancar el juego
 pilas.ejecutar()
